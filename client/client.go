@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -140,7 +141,16 @@ func (c *Client) Save(obj interface{}, endpoint string) (responce *http.Response
 	if err != nil {
 		log.Fatal(err)
 	}
-	url := fmt.Sprintf("%s%s", BaseURL, endpoint)
+
+	urlArr := strings.Split(endpoint, "/")
+	var url string
+	var flag bool
+	if len(urlArr) > 2 && urlArr[2] == "api.sonar.constellix.com" {
+		url = endpoint
+		flag = true
+	} else {
+		url = fmt.Sprintf("%s%s", BaseURL, endpoint)
+	}
 
 	req, err1 := c.makeRequest("POST", url, jsonPayload)
 	log.Println(req)
@@ -153,7 +163,10 @@ func (c *Client) Save(obj interface{}, endpoint string) (responce *http.Response
 		return nil, err2
 	}
 	log.Println(resp)
-	return resp, checkForErrors(resp)
+	if flag == false {
+		return resp, checkForErrors(resp)
+	}
+	return resp, checkForErrorsChecks(resp)
 }
 
 func checkForErrors(resp *http.Response) error {
@@ -180,8 +193,29 @@ func checkForErrors(resp *http.Response) error {
 	return nil
 }
 
+func checkForErrorsChecks(resp *http.Response) error {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != 201 {
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		bodyString := string(bodyBytes)
+
+		return fmt.Errorf("%s", bodyString)
+	}
+	return nil
+}
+
 func (c *Client) GetbyId(endpoint string) (response *http.Response, err error) {
-	url := fmt.Sprintf("%s%s", BaseURL, endpoint)
+	var url string
+	var flag bool
+	urlArr := strings.Split(endpoint, "/")
+	if len(urlArr) > 2 && urlArr[2] == "api.sonar.constellix.com" {
+		url = endpoint
+		flag = true
+	} else {
+		url = fmt.Sprintf("%s%s", BaseURL, endpoint)
+	}
 
 	req, err := c.makeRequest("GET", url, nil)
 	if err != nil {
@@ -195,11 +229,21 @@ func (c *Client) GetbyId(endpoint string) (response *http.Response, err error) {
 	}
 
 	log.Println("Response for Get: ", resp)
-	return resp, checkForErrors(resp)
+	if flag == false {
+		return resp, checkForErrors(resp)
+	}
+	return resp, checkForErrorsChecks(resp)
 }
 
 func (c *Client) DeletebyId(endpoint string) error {
-	url := fmt.Sprintf("%s%s", BaseURL, endpoint)
+	var url string
+	urlArr := strings.Split(endpoint, "/")
+	if len(urlArr) > 2 && urlArr[2] == "api.sonar.constellix.com" {
+		url = endpoint
+	} else {
+		url = fmt.Sprintf("%s%s", BaseURL, endpoint)
+	}
+
 	req, err := c.makeRequest("DELETE", url, nil)
 	if err != nil {
 		return err
@@ -217,7 +261,15 @@ func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Re
 	if err != nil {
 		log.Fatal(err)
 	}
-	url := fmt.Sprintf("%s%s", BaseURL, endpoint)
+	urlArr := strings.Split(endpoint, "/")
+	var url string
+	var flag bool
+	if len(urlArr) > 2 && urlArr[2] == "api.sonar.constellix.com" {
+		url = endpoint
+		flag = true
+	} else {
+		url = fmt.Sprintf("%s%s", BaseURL, endpoint)
+	}
 
 	req, err1 := c.makeRequest("PUT", url, jsonPayload)
 	log.Println(req)
@@ -230,5 +282,8 @@ func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Re
 		return nil, err2
 	}
 	log.Println(resp)
-	return resp, checkForErrors(resp)
+	if flag == false {
+		return resp, checkForErrors(resp)
+	}
+	return resp, checkForErrorsChecks(resp)
 }

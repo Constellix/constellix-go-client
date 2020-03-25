@@ -12,16 +12,16 @@ type Soa struct {
 }
 
 type DomainAttributes struct {
-	Name            []string `json:"names"`
-	TypeID          int      `json:"typeId,omitempty"`
-	HasGtdRegions   bool     `json:"hasGtdRegions,omitempty"`
-	HasGeoIP        bool     `json:"hasGeoIP,omitempty"`
-	NameserverGroup string   `json:"nameserverGroup,omitempty"`
-	Nameservers     []string `json:"nameservers,omitempty"`
-	Note            string   `json:"note,omitempty"`
-	Version         int      `json:"version,omitempty"`
-	Status          string   `json:"status,omitempty"`
-	Tags            []string `json:"tags,omitempty"`
+	Name            []string      `json:"names"`
+	TypeID          int           `json:"typeId,omitempty"`
+	HasGtdRegions   bool          `json:"hasGtdRegions,omitempty"`
+	HasGeoIP        bool          `json:"hasGeoIP,omitempty"`
+	NameserverGroup string        `json:"nameserverGroup,omitempty"`
+	Nameservers     []string      `json:"nameservers,omitempty"`
+	Note            string        `json:"note,omitempty"`
+	Version         int           `json:"version,omitempty"`
+	Status          string        `json:"status,omitempty"`
+	Tags            []interface{} `json:"tags,omitempty"`
 
 	Soa *Soa `json:"soa,omitempty"`
 }
