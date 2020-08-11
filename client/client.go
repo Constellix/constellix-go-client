@@ -125,7 +125,7 @@ func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Req
 	mux.Lock()
 	c.reqCount++
 	if c.reqCount > 4 {
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 2)
 		log.Println("Sleeeeeeep")
 		c.reqCount = 0
 	}
