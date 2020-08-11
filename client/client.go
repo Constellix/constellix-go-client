@@ -132,7 +132,6 @@ func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Req
 		c.reqCount = 0
 	}
 
-	log.Printf("cooouni %d", c.reqCount)
 	var req *http.Request
 	var err error
 	if method == "POST" || method == "PUT" {
@@ -143,7 +142,7 @@ func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Req
 	if err != nil {
 		return nil, err
 	}
-
+	log.Printf("cooouni %d %v", c.reqCount, req)
 	//Calling for token and setting headers
 	token := getToken(c.apiKey, c.secretKey)
 	req.Header.Set("Content-Type", "application/json")
