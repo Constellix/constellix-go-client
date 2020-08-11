@@ -128,8 +128,11 @@ func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Req
 
 	if c.reqCount > 4 {
 		time.Sleep(time.Second)
+		log.Println("Sleeeeeeep")
 		c.reqCount = 0
 	}
+
+	log.Printf("cooouni %d", c.reqCount)
 	var req *http.Request
 	var err error
 	if method == "POST" || method == "PUT" {
