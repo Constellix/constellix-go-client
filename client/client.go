@@ -20,15 +20,17 @@ import (
 
 const BaseURL = "https://api.dns.constellix.com/"
 
-var mux sync.Mutex
+var mux, headerMux sync.Mutex
 
 type Client struct {
-	httpclient *http.Client
-	apiKey     string //Required
-	secretKey  string //Required
-	insecure   bool   //Optional
-	proxyurl   string //Optional
-	reqCount   int    //Optional
+	httpclient         *http.Client
+	apiKey             string //Required
+	secretKey          string //Required
+	insecure           bool   //Optional
+	proxyurl           string //Optional
+	reqRemCount        int    //Optional
+	reqRefreshInterval int    //Optional
+	totalReq           int    //Optional
 }
 
 //singleton implementation of a client
@@ -51,9 +53,10 @@ func ProxyUrl(pUrl string) Option {
 func initClient(apiKey, secretKey string, options ...Option) *Client {
 	//existing information about client
 	client := &Client{
-		apiKey:    apiKey,
-		secretKey: secretKey,
-		reqCount:  0,
+		apiKey:             apiKey,
+		secretKey:          secretKey,
+		reqRemCount:        30,
+		reqRefreshInterval: 30,
 	}
 	for _, option := range options {
 		option(client)
@@ -123,13 +126,12 @@ func getToken(apiKey, secretKey string) string {
 func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Request, error) {
 	//Defining http request
 	mux.Lock()
-	c.reqCount++
+	if c.reqRemCount <= 2 {
+		time.Sleep(time.Second * time.Duration(c.reqRefreshInterval))
+		log.Println("Sleeeeeeep")
+	}
 	mux.Unlock()
 
-	if c.reqCount > 4 {
-		time.Sleep(time.Second)
-		c.reqCount = 0
-	}
 	var req *http.Request
 	var err error
 	if method == "POST" || method == "PUT" {
@@ -140,7 +142,7 @@ func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Req
 	if err != nil {
 		return nil, err
 	}
-
+	log.Printf("cooouni %d %v", c.reqRemCount, req)
 	//Calling for token and setting headers
 	token := getToken(c.apiKey, c.secretKey)
 	req.Header.Set("Content-Type", "application/json")
@@ -166,12 +168,12 @@ func (c *Client) Save(obj interface{}, endpoint string) (responce *http.Response
 	}
 
 	req, err1 := c.makeRequest("POST", url, jsonPayload)
-	log.Println(req, c.reqCount)
+	log.Println(req, c.reqRemCount)
 	if err1 != nil {
 		return nil, err1
 	}
 
-	resp, err2 := c.httpclient.Do(req)
+	resp, err2 := c.Do(req)
 	if err2 != nil {
 		return nil, err2
 	}
@@ -236,7 +238,7 @@ func (c *Client) GetbyId(endpoint string) (response *http.Response, err error) {
 	}
 	log.Println("In GET by ID :", req)
 
-	resp, err1 := c.httpclient.Do(req)
+	resp, err1 := c.Do(req)
 	if err1 != nil {
 		return nil, err1
 	}
@@ -262,13 +264,35 @@ func (c *Client) DeletebyId(endpoint string) error {
 		return err
 	}
 
-	_, err1 := c.httpclient.Do(req)
+	_, err1 := c.Do(req)
 	if err1 != nil {
 		return err1
 	}
 	return nil
 }
 
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
+	resp, err := c.httpclient.Do(req)
+	headerMux.Lock()
+	for k, v := range resp.Header {
+		if k == "requestsRemainingHeader" {
+			tempInt, err := strconv.Atoi(v[0])
+			if err == nil {
+				c.reqRemCount = tempInt
+			}
+		}
+		if k == "requestRefreshInterval" {
+			tempInt, err := strconv.Atoi(v[0])
+			if err == nil {
+				c.reqRefreshInterval = tempInt
+			}
+		}
+	}
+	c.totalReq++
+	headerMux.Unlock()
+	log.Printf("toooot %d", c.totalReq)
+	return resp, err
+}
 func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Response, err error) {
 	jsonPayload, err := json.Marshal(obj)
 	if err != nil {
@@ -290,7 +314,7 @@ func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Re
 		return nil, err1
 	}
 
-	resp, err2 := c.httpclient.Do(req)
+	resp, err2 := c.Do(req)
 	if err2 != nil {
 		return nil, err2
 	}
