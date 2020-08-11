@@ -14,10 +14,13 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 const BaseURL = "https://api.dns.constellix.com/"
+
+var mux sync.Mutex
 
 type Client struct {
 	httpclient *http.Client
@@ -25,6 +28,7 @@ type Client struct {
 	secretKey  string //Required
 	insecure   bool   //Optional
 	proxyurl   string //Optional
+	reqCount   int    //Optional
 }
 
 //singleton implementation of a client
@@ -49,6 +53,7 @@ func initClient(apiKey, secretKey string, options ...Option) *Client {
 	client := &Client{
 		apiKey:    apiKey,
 		secretKey: secretKey,
+		reqCount:  0,
 	}
 	for _, option := range options {
 		option(client)
@@ -117,6 +122,14 @@ func getToken(apiKey, secretKey string) string {
 
 func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Request, error) {
 	//Defining http request
+	mux.Lock()
+	c.reqCount++
+	mux.Unlock()
+
+	if c.reqCount > 4 {
+		time.Sleep(time.Second)
+		c.reqCount = 0
+	}
 	var req *http.Request
 	var err error
 	if method == "POST" || method == "PUT" {
@@ -153,7 +166,7 @@ func (c *Client) Save(obj interface{}, endpoint string) (responce *http.Response
 	}
 
 	req, err1 := c.makeRequest("POST", url, jsonPayload)
-	log.Println(req)
+	log.Println(req, c.reqCount)
 	if err1 != nil {
 		return nil, err1
 	}
