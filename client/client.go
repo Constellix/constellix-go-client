@@ -130,6 +130,7 @@ func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Req
 		time.Sleep(time.Second * time.Duration(c.reqRefreshInterval))
 		log.Println("Sleeeeeeep", c.reqRefreshInterval)
 	}
+	c.reqRemCount--
 	mux.Unlock()
 
 	var req *http.Request
