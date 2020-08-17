@@ -128,7 +128,7 @@ func (c *Client) makeRequest(method, endpoint string, payload []byte) (*http.Req
 	mux.Lock()
 	if c.reqRemCount <= 2 {
 		time.Sleep(time.Second * time.Duration(c.reqRefreshInterval))
-		log.Println("Sleeeeeeep")
+		log.Println("Sleeeeeeep", c.reqRefreshInterval)
 	}
 	mux.Unlock()
 
