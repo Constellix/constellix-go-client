@@ -275,6 +275,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.httpclient.Do(req)
 	headerMux.Lock()
 	for k, v := range resp.Header {
+		log.Printf("herrrr %s", k)
 		if k == "requestsRemainingHeader" {
 			tempInt, err := strconv.Atoi(v[0])
 			if err == nil {
