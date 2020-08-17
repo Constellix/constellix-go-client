@@ -55,8 +55,8 @@ func initClient(apiKey, secretKey string, options ...Option) *Client {
 	client := &Client{
 		apiKey:             apiKey,
 		secretKey:          secretKey,
-		reqRemCount:        30,
-		reqRefreshInterval: 30,
+		reqRemCount:        20,
+		reqRefreshInterval: 0,
 	}
 	for _, option := range options {
 		option(client)
@@ -286,7 +286,9 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		if k == "Requestrefreshinterval" {
 			tempInt, err := strconv.Atoi(v[0])
 			if err == nil {
-				c.reqRefreshInterval = tempInt
+				if c.reqRefreshInterval != 0 {
+					c.reqRefreshInterval = tempInt
+				}
 			}
 		}
 	}
