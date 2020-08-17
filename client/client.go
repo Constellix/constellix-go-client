@@ -286,7 +286,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		if k == "Requestrefreshinterval" {
 			tempInt, err := strconv.Atoi(v[0])
 			if err == nil {
-				if c.reqRefreshInterval != 0 {
+				if c.reqRefreshInterval == 0 {
 					c.reqRefreshInterval = tempInt
 				}
 			}
