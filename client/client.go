@@ -276,14 +276,14 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	headerMux.Lock()
 	for k, v := range resp.Header {
 		log.Printf("herrrr %s", k)
-		if k == "requestsRemainingHeader" {
+		if k == "Requestsremainingheader" {
 			tempInt, err := strconv.Atoi(v[0])
 			if err == nil {
 				c.reqRemCount = tempInt
 			}
 			log.Printf("Remhed found %d", tempInt)
 		}
-		if k == "requestRefreshInterval" {
+		if k == "Requestrefreshinterval" {
 			tempInt, err := strconv.Atoi(v[0])
 			if err == nil {
 				c.reqRefreshInterval = tempInt
