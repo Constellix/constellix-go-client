@@ -280,6 +280,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 			if err == nil {
 				c.reqRemCount = tempInt
 			}
+			log.Printf("Remhed found %d", tempInt)
 		}
 		if k == "requestRefreshInterval" {
 			tempInt, err := strconv.Atoi(v[0])
