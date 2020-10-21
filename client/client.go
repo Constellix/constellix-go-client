@@ -194,7 +194,7 @@ func checkForErrors(resp *http.Response) error {
 }
 
 func checkForErrorsChecks(resp *http.Response) error {
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != 201 {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != 201 && resp.StatusCode != 202 {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Fatal(err)
