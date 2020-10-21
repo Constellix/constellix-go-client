@@ -257,7 +257,7 @@ func (c *Client) DeletebyId(endpoint string) error {
 		return err1
 	}
 	log.Println("Response from server for delete : ", resp)
-	return checkForErrors(resp)
+	return checkForErrorsChecks(resp)
 }
 
 func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Response, err error) {
