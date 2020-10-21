@@ -249,10 +249,14 @@ func (c *Client) DeletebyId(endpoint string) error {
 		return err
 	}
 
+	log.Println("request for delete : ", req)
+
 	resp, err1 := c.httpclient.Do(req)
 	if err1 != nil {
+		log.Println("Response from server for delete : ", resp)
 		return err1
 	}
+	log.Println("Response from server for delete : ", resp)
 	return checkForErrors(resp)
 }
 
