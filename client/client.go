@@ -154,7 +154,7 @@ func (c *Client) Save(obj interface{}, endpoint string) (responce *http.Response
 
 	var req *http.Request
 	var resp *http.Response
-	for i := 0; i < 3; i++ {
+	for true {
 		req, err = c.makeRequest("POST", url, jsonPayload)
 		log.Println(req)
 		if err != nil {
@@ -241,7 +241,7 @@ func (c *Client) GetbyId(endpoint string) (response *http.Response, err error) {
 
 	var req *http.Request
 	var resp *http.Response
-	for i := 0; i < 3; i++ {
+	for true {
 		req, err = c.makeRequest("GET", url, nil)
 		if err != nil {
 			return nil, err
@@ -290,7 +290,7 @@ func (c *Client) DeletebyId(endpoint string) error {
 	}
 
 	var resp *http.Response
-	for i := 0; i < 3; i++ {
+	for true {
 		req, err := c.makeRequest("DELETE", url, nil)
 		if err != nil {
 			return err
@@ -340,7 +340,7 @@ func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Re
 	}
 
 	var resp *http.Response
-	for i := 0; i < 3; i++ {
+	for true {
 		req, err := c.makeRequest("PUT", url, jsonPayload)
 		log.Println(req)
 		if err != nil {
