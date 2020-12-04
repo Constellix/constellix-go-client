@@ -152,17 +152,39 @@ func (c *Client) Save(obj interface{}, endpoint string) (responce *http.Response
 		url = fmt.Sprintf("%s%s", BaseURL, endpoint)
 	}
 
-	req, err1 := c.makeRequest("POST", url, jsonPayload)
-	log.Println(req)
-	if err1 != nil {
-		return nil, err1
-	}
+	var req *http.Request
+	var resp *http.Response
+	for i := 0; i < 3; i++ {
+		req, err = c.makeRequest("POST", url, jsonPayload)
+		log.Println(req)
+		if err != nil {
+			return nil, err
+		}
 
-	resp, err2 := c.httpclient.Do(req)
-	if err2 != nil {
-		return nil, err2
+		resp, err = c.httpclient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(resp)
+		if resp.StatusCode == 429 {
+			limitRate, _ := strconv.ParseFloat(resp.Header.Get("Requestlimitrate"), 64)
+			timeReq := 1/limitRate + 5
+			time.Sleep(time.Duration(timeReq) * time.Second)
+		} else {
+			break
+		}
 	}
-	log.Println(resp)
+	// req, err1 := c.makeRequest("POST", url, jsonPayload)
+	// log.Println(req)
+	// if err1 != nil {
+	// 	return nil, err1
+	// }
+
+	// resp, err2 := c.httpclient.Do(req)
+	// if err2 != nil {
+	// 	return nil, err2
+	// }
+	// log.Println(resp)
 	if flag == false {
 		return resp, checkForErrors(resp)
 	}
@@ -217,18 +239,41 @@ func (c *Client) GetbyId(endpoint string) (response *http.Response, err error) {
 		url = fmt.Sprintf("%s%s", BaseURL, endpoint)
 	}
 
-	req, err := c.makeRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	log.Println("In GET by ID :", req)
+	var req *http.Request
+	var resp *http.Response
+	for i := 0; i < 3; i++ {
+		req, err = c.makeRequest("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
+		log.Println("In GET by ID :", req)
 
-	resp, err1 := c.httpclient.Do(req)
-	if err1 != nil {
-		return nil, err1
-	}
+		resp, err = c.httpclient.Do(req)
+		if err != nil {
+			return nil, err
+		}
 
-	log.Println("Response for Get: ", resp)
+		log.Println("Response for Get: ", resp)
+		if resp.StatusCode == 429 {
+			limitRate, _ := strconv.ParseFloat(resp.Header.Get("Requestlimitrate"), 64)
+			timeReq := 1/limitRate + 5
+			time.Sleep(time.Duration(timeReq) * time.Second)
+		} else {
+			break
+		}
+	}
+	// req, err := c.makeRequest("GET", url, nil)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// log.Println("In GET by ID :", req)
+
+	// resp, err1 := c.httpclient.Do(req)
+	// if err1 != nil {
+	// 	return nil, err1
+	// }
+
+	// log.Println("Response for Get: ", resp)
 	if flag == false {
 		return resp, checkForErrors(resp)
 	}
@@ -244,19 +289,38 @@ func (c *Client) DeletebyId(endpoint string) error {
 		url = fmt.Sprintf("%s%s", BaseURL, endpoint)
 	}
 
-	req, err := c.makeRequest("DELETE", url, nil)
-	if err != nil {
-		return err
-	}
+	var resp *http.Response
+	for i := 0; i < 3; i++ {
+		req, err := c.makeRequest("DELETE", url, nil)
+		if err != nil {
+			return err
+		}
+		log.Println("request for delete : ", req)
 
-	log.Println("request for delete : ", req)
-
-	resp, err1 := c.httpclient.Do(req)
-	if err1 != nil {
+		resp, err = c.httpclient.Do(req)
+		if err != nil {
+			return err
+		}
 		log.Println("Response from server for delete : ", resp)
-		return err1
+		if resp.StatusCode == 429 {
+			limitRate, _ := strconv.ParseFloat(resp.Header.Get("Requestlimitrate"), 64)
+			timeReq := 1/limitRate + 5
+			time.Sleep(time.Duration(timeReq) * time.Second)
+		} else {
+			break
+		}
 	}
-	log.Println("Response from server for delete : ", resp)
+	// req, err := c.makeRequest("DELETE", url, nil)
+	// if err != nil {
+	// 	return err
+	// }
+	// log.Println("request for delete : ", req)
+
+	// resp, err1 := c.httpclient.Do(req)
+	// if err1 != nil {
+	// 	return err1
+	// }
+	// log.Println("Response from server for delete : ", resp)
 	return checkForErrorsChecks(resp)
 }
 
@@ -275,17 +339,38 @@ func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Re
 		url = fmt.Sprintf("%s%s", BaseURL, endpoint)
 	}
 
-	req, err1 := c.makeRequest("PUT", url, jsonPayload)
-	log.Println(req)
-	if err1 != nil {
-		return nil, err1
-	}
+	var resp *http.Response
+	for i := 0; i < 3; i++ {
+		req, err := c.makeRequest("PUT", url, jsonPayload)
+		log.Println(req)
+		if err != nil {
+			return nil, err
+		}
 
-	resp, err2 := c.httpclient.Do(req)
-	if err2 != nil {
-		return nil, err2
+		resp, err = c.httpclient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(resp)
+		if resp.StatusCode == 429 {
+			limitRate, _ := strconv.ParseFloat(resp.Header.Get("Requestlimitrate"), 64)
+			timeReq := 1/limitRate + 5
+			time.Sleep(time.Duration(timeReq) * time.Second)
+		} else {
+			break
+		}
 	}
-	log.Println(resp)
+	// req, err1 := c.makeRequest("PUT", url, jsonPayload)
+	// log.Println(req)
+	// if err1 != nil {
+	// 	return nil, err1
+	// }
+
+	// resp, err2 := c.httpclient.Do(req)
+	// if err2 != nil {
+	// 	return nil, err2
+	// }
+	// log.Println(resp)
 	if flag == false {
 		return resp, checkForErrors(resp)
 	}
