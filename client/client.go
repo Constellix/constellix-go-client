@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/net/context"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,20 +16,23 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/time/rate"
 )
 
 const BaseURL = "https://api.dns.constellix.com/"
 
 type Client struct {
-	httpclient *http.Client
-	apiKey     string //Required
-	secretKey  string //Required
-	insecure   bool   //Optional
-	proxyurl   string //Optional
+	httpclient  *http.Client
+	rateLimiter *rate.Limiter // Optional
+	apiKey      string        // Required
+	secretKey   string        // Required
+	insecure    bool          // Optional
+	proxyUrl    string        // Optional
 }
 
 //singleton implementation of a client
-var clietnImpl *Client
+var clientImpl *Client
 
 type Option func(*Client)
 
@@ -40,7 +44,16 @@ func Insecure(insecure bool) Option {
 
 func ProxyUrl(pUrl string) Option {
 	return func(client *Client) {
-		client.proxyurl = pUrl
+		client.proxyUrl = pUrl
+	}
+}
+
+func RequestInterval(pInterval float32) Option {
+	return func(client *Client) {
+		if pInterval >= 0 {
+			rl := rate.NewLimiter(rate.Every(time.Duration(pInterval)*time.Second), 1)
+			client.rateLimiter = rl
+		}
 	}
 }
 
@@ -57,7 +70,7 @@ func initClient(apiKey, secretKey string, options ...Option) *Client {
 	//Setting up the HTTP client for the API call
 	var transport *http.Transport
 	transport = client.useInsecureHTTPClient(client.insecure)
-	if client.proxyurl != "" {
+	if client.proxyUrl != "" {
 		transport = client.configProxy(transport)
 	}
 	client.httpclient = &http.Client{
@@ -68,8 +81,8 @@ func initClient(apiKey, secretKey string, options ...Option) *Client {
 
 //Returns a singleton
 func GetClient(apiKey, secretKey string, options ...Option) *Client {
-	clietnImpl = initClient(apiKey, secretKey, options...)
-	return clietnImpl
+	clientImpl = initClient(apiKey, secretKey, options...)
+	return clientImpl
 }
 
 func (c *Client) useInsecureHTTPClient(insecure bool) *http.Transport {
@@ -93,7 +106,7 @@ func (c *Client) useInsecureHTTPClient(insecure bool) *http.Transport {
 }
 
 func (c *Client) configProxy(transport *http.Transport) *http.Transport {
-	pUrl, err := url.Parse(c.proxyurl)
+	pUrl, err := url.Parse(c.proxyUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,16 +115,16 @@ func (c *Client) configProxy(transport *http.Transport) *http.Transport {
 }
 
 func getToken(apiKey, secretKey string) string {
-	//Extracts epoch time in miliseconds
-	time := strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10)
+	// Extracts epoch time in milliseconds
+	epochTime := strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10)
 
-	//Calculate hmac using secrest key and epoch time
+	// Calculate hmac using secret key and epoch time
 	h := hmac.New(sha1.New, []byte(secretKey))
-	h.Write([]byte(time))
+	h.Write([]byte(epochTime))
 	sha := base64.StdEncoding.EncodeToString(h.Sum(nil))
 
-	//Building token as 'apikey:hmac:time'
-	token := string(apiKey) + ":" + string(sha) + ":" + string(time)
+	// Building token as 'apikey:hmac:time'
+	token := apiKey + ":" + sha + ":" + epochTime
 	return token
 }
 
@@ -158,6 +171,12 @@ func (c *Client) Save(obj interface{}, endpoint string) (responce *http.Response
 		return nil, err1
 	}
 
+	ctx := context.Background()
+	err = c.rateLimiter.Wait(ctx) // This is a blocking call. Honors the rate limit
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err2 := c.httpclient.Do(req)
 	if err2 != nil {
 		return nil, err2
@@ -178,17 +197,17 @@ func checkForErrors(resp *http.Response) error {
 		bodyString := string(bodyBytes)
 
 		var data map[string]interface{}
-		json.Unmarshal([]byte(bodyString), &data)
+		_ = json.Unmarshal([]byte(bodyString), &data)
 
 		var errors []interface{}
 		errors = data["errors"].([]interface{})
 
-		var allerrs string
+		var allErrs string
 		for _, val := range errors {
-			allerrs = allerrs + val.(string)
+			allErrs = allErrs + val.(string)
 		}
-		log.Println(" Errors are .....:: ", allerrs)
-		return fmt.Errorf("%s", allerrs)
+		log.Println(" Errors are .....:: ", allErrs)
+		return fmt.Errorf("%s", allErrs)
 	}
 	return nil
 }
@@ -223,6 +242,14 @@ func (c *Client) GetbyId(endpoint string) (response *http.Response, err error) {
 	}
 	log.Println("In GET by ID :", req)
 
+	if c.rateLimiter != nil {
+		ctx := context.Background()
+		err = c.rateLimiter.Wait(ctx) // This is a blocking call. Honors the rate limit
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	resp, err1 := c.httpclient.Do(req)
 	if err1 != nil {
 		return nil, err1
@@ -250,6 +277,14 @@ func (c *Client) DeletebyId(endpoint string) error {
 	}
 
 	log.Println("request for delete : ", req)
+
+	if c.rateLimiter != nil {
+		ctx := context.Background()
+		err = c.rateLimiter.Wait(ctx) // This is a blocking call. Honors the rate limit
+		if err != nil {
+			return err
+		}
+	}
 
 	resp, err1 := c.httpclient.Do(req)
 	if err1 != nil {
@@ -279,6 +314,14 @@ func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Re
 	log.Println(req)
 	if err1 != nil {
 		return nil, err1
+	}
+
+	if c.rateLimiter != nil {
+		ctx := context.Background()
+		err = c.rateLimiter.Wait(ctx) // This is a blocking call. Honors the rate limit
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	resp, err2 := c.httpclient.Do(req)
