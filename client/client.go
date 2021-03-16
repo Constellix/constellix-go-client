@@ -174,17 +174,7 @@ func (c *Client) Save(obj interface{}, endpoint string) (responce *http.Response
 			break
 		}
 	}
-	// req, err1 := c.makeRequest("POST", url, jsonPayload)
-	// log.Println(req)
-	// if err1 != nil {
-	// 	return nil, err1
-	// }
 
-	// resp, err2 := c.httpclient.Do(req)
-	// if err2 != nil {
-	// 	return nil, err2
-	// }
-	// log.Println(resp)
 	if flag == false {
 		return resp, checkForErrors(resp)
 	}
@@ -262,18 +252,7 @@ func (c *Client) GetbyId(endpoint string) (response *http.Response, err error) {
 			break
 		}
 	}
-	// req, err := c.makeRequest("GET", url, nil)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// log.Println("In GET by ID :", req)
 
-	// resp, err1 := c.httpclient.Do(req)
-	// if err1 != nil {
-	// 	return nil, err1
-	// }
-
-	// log.Println("Response for Get: ", resp)
 	if flag == false {
 		return resp, checkForErrors(resp)
 	}
@@ -310,17 +289,7 @@ func (c *Client) DeletebyId(endpoint string) error {
 			break
 		}
 	}
-	// req, err := c.makeRequest("DELETE", url, nil)
-	// if err != nil {
-	// 	return err
-	// }
-	// log.Println("request for delete : ", req)
 
-	// resp, err1 := c.httpclient.Do(req)
-	// if err1 != nil {
-	// 	return err1
-	// }
-	// log.Println("Response from server for delete : ", resp)
 	return checkForErrorsChecks(resp)
 }
 
@@ -360,17 +329,7 @@ func (c *Client) UpdatebyID(obj interface{}, endpoint string) (response *http.Re
 			break
 		}
 	}
-	// req, err1 := c.makeRequest("PUT", url, jsonPayload)
-	// log.Println(req)
-	// if err1 != nil {
-	// 	return nil, err1
-	// }
 
-	// resp, err2 := c.httpclient.Do(req)
-	// if err2 != nil {
-	// 	return nil, err2
-	// }
-	// log.Println(resp)
 	if flag == false {
 		return resp, checkForErrors(resp)
 	}
