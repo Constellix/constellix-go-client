@@ -14,8 +14,8 @@ type Soa struct {
 type DomainAttributes struct {
 	Name             []string      `json:"names,omitempty"`
 	TypeID           int           `json:"typeId,omitempty"`
-	HasGtdRegions    bool          `json:"hasGtdRegions"`
-	HasGeoIP         bool          `json:"hasGeoIP"`
+	HasGtdRegions    bool          `json:"hasGtdRegions,omitempty"`
+	HasGeoIP         bool          `json:"hasGeoIP,omitempty"`
 	NameserverGroup  string        `json:"nameserverGroup,omitempty"`
 	VanityNameServer string        `json:"vanityNameServer,omitempty"`
 	Nameservers      []string      `json:"nameservers,omitempty"`
