@@ -10,6 +10,7 @@ type HttpcheckAttr struct {
 	Interval                  string        `json:"interval,omitempty"`
 	IntervalPolicy            string        `json:"monitorIntervalPolicy,omitempty"`
 	VerificationPolicy        string        `json:"verificationPolicy,omitempty"`
+	SSLPolicy                 string        `json:"sslPolicy,omitempty"`
 	FQDN                      string        `json:"fqdn,omitempty"`
 	PATH                      string        `json:"path,omitempty"`
 	SearchString              string        `json:"searchString,omitempty"`
